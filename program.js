@@ -99,17 +99,47 @@
 // 
 // HTML STREAM
 
-var trumpet = require('trumpet');
-var through2 = require('through2');
-var tr = trumpet();
+// var trumpet = require('trumpet');
+// var through2 = require('through2');
+// var tr = trumpet();
 
-var stream = tr.select('.loud').createStream();
+// var stream = tr.select('.loud').createStream();
 
-stream.pipe(through2.obj(Upper)).pipe(stream)
+// stream.pipe(through2.obj(Upper)).pipe(stream)
 
-function Upper(chunk,enc, callback){
-  this.push(chunk.toString().toUpperCase())
-  callback()
-}
+// function Upper(chunk,enc, callback){
+//   this.push(chunk.toString().toUpperCase())
+//   callback()
+// }
 
-process.stdin.pipe(tr).pipe(process.stdout);
+// process.stdin.pipe(tr).pipe(process.stdout);
+
+//DUPLEXER
+
+// var spawn = require('child_process').spawn;
+// var duplexer2 = require('duplexer2');
+
+// module.exports = function (cmd, args) {
+//     var spawned = spawn(cmd, args)
+//     return duplexer2(spawned.stdin, spawned.stdout);
+// };
+// 
+// DUPLEXER REDUX
+
+var duplexer2 = require('duplexer2');
+var through2 = require('through2')
+
+module.exports = function (counter) {
+    var counts = {};
+    var input = through2(write, end);
+    return duplexer2({objectMode: true}, input, counter);
+    
+    function write (row, _, next) {
+        counts[row.country] = (counts[row.country] || 0) + 1;
+        next();
+    }
+    function end (done) {
+        counter.setCounts(counts);
+        done();
+    }
+};
